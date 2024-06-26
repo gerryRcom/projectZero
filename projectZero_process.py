@@ -32,9 +32,7 @@ dataSource= {
 
 dbContent = dbCurser.execute('SELECT * FROM projectZeroNews WHERE date =(?)',(todayDB,))
 for row in dbContent:
-    #print(row[1]) # Where 2 is the X column
-
-
+    print(row[1]) # Where 2 is the X column
 #for key, value in dataSource.items():
     sourceQuestion1 = {
         "model": "mistral",
@@ -61,15 +59,14 @@ for row in dbContent:
     llmResponseText2 = llmResponseJSON2["response"]
     llmStatus = llmResponseText1.split(' ')[1]
     llmTicker = llmResponseText2.split(' ')[1]
+    print(llmStatus)
+    print(llmTicker)
 
     if llmStatus == "Negative" or llmStatus == "Positive":
         if len(llmTicker) >= 1 and len(llmTicker) <= 5:
-            print(llmStatus)
-            print(llmTicker)
-        else:
-            continue
-    else:
-        continue
+            dbConnect.execute("INSERT INTO projectZeroTickers(date, ticker, status) VALUES(?, ?, ?)",(todayDB, llmStatus, llmTicker))
+            print('1')
+            dbConnect.commit()
 
 
 # Close DB connection

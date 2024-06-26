@@ -11,12 +11,16 @@ if os.path.exists(projectZeroDB):
     dbCurser = dbConnect.cursor()
     dbContent = dbCurser.execute("SELECT * FROM projectZeroNews")
     print(dbContent.fetchall())
+    dbContent = dbCurser.execute("SELECT * FROM projectZeroTickers")
+    print(dbContent.fetchall())
     dbConnect.close()
     sys.exit()
 else:
     dbConnect = sqlite3.connect(projectZeroDB)
     dbCurser = dbConnect.cursor()
     dbCurser.execute("CREATE TABLE projectZeroNews(date, headline, UNIQUE(headline))")
+    dbConnect.commit()
+    dbCurser.execute("CREATE TABLE projectZeroTickers(date, ticker, status)")
     dbConnect.commit()
     dbConnect.close()
     if os.path.exists(projectZeroDB):
