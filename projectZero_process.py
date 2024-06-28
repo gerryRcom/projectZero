@@ -17,23 +17,20 @@ else:
     # connect to DB to pull info to query
     dbConnect = sqlite3.connect(projectZeroDB)
     dbCurser = dbConnect.cursor()
-    # Launch local llm to process info
-    #llmProcess = subprocess.Popen("./ollama serve", shell=True)
-    #llmModel = subprocess.Popen("./ollama run mistral", shell=True)
+    
+    # Launch local llm to process info (manually doing this atm)
+    # llmProcess = subprocess.Popen("./ollama serve", shell=True)
+    # llmModel = subprocess.Popen("./ollama run mistral", shell=True)
 
 # Get date for DB entries
 today = date.today()
 todayDB = today.isoformat()
 
-dataSource= {
-    "hp develop great new technology": "2024-01-01",
-    "microsoft are doomed": "2024-01-01"
-   }
-
+# Get todays content from DB to pass to llm for processing
 dbContent = dbCurser.execute('SELECT * FROM projectZeroNews WHERE date =(?)',(todayDB,))
 for row in dbContent:
     print(row[1]) # Where 2 is the X column
-#for key, value in dataSource.items():
+    # t up the prompts to pass to the llm
     sourceQuestion1 = {
         "model": "mistral",
         "prompt": "answer in one word whether this statemet is positive or negative news for the company: "+str(row),
@@ -47,10 +44,11 @@ for row in dbContent:
     sourceHeader = {
         "Content-Type": "application/json"
     }
-    #sourceDate=value
+    # pass two queries to local llm 
     sourceContent1 = requests.post("http://localhost:11434/api/generate", headers=sourceHeader, data=json.dumps(sourceQuestion1))
     sourceContent2 = requests.post("http://localhost:11434/api/generate", headers=sourceHeader, data=json.dumps(sourceQuestion2))
-    # Scrape the site using bs4 and extract required content based on pre-determined tag
+    
+    # extract the specific part of the response required
     llmResponseData1 = sourceContent1.text
     llmResponseData2 = sourceContent2.text
     llmResponseJSON1 = json.loads(llmResponseData1)
@@ -62,12 +60,11 @@ for row in dbContent:
     print(llmStatus)
     print(llmTicker)
 
+    # only save replies to the DB that have a reasonable chance of being accurate
     if llmStatus == "Negative" or llmStatus == "Positive":
         if len(llmTicker) >= 1 and len(llmTicker) <= 5:
             dbConnect.execute("INSERT INTO projectZeroTickers(date, ticker, status) VALUES(?, ?, ?)",(todayDB, llmStatus, llmTicker))
-            print('1')
             dbConnect.commit()
-
 
 # Close DB connection
 dbConnect.close()

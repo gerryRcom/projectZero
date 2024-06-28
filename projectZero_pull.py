@@ -34,6 +34,7 @@ for key, value in dataSource.items():
     sourceSite=key
     sourceID=value
     sourceContent = requests.get(sourceSite)
+
     # Scrape the site using bs4 and extract required content based on pre-determined tag
     soup = BeautifulSoup(sourceContent.content, "xml")
     sourceContent = soup.find_all(sourceID)
@@ -41,10 +42,10 @@ for key, value in dataSource.items():
         tempContent = str(content)
         tempContent = tempContent.rsplit("<", 1)[-2]
         keyContent = tempContent.rsplit(">", 1)[-1]
+
         # pass the extracted headlines to sqlite3 db
         dbCurser.execute("INSERT OR IGNORE INTO projectZeroNews(date, headline) VALUES(?, ?)",(todayDB, keyContent))
         dbConnect.commit()
-        # print(keyContent)
 
 # Close DB connection
 dbConnect.close()
